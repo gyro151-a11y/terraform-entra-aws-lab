@@ -1,0 +1,14 @@
+# Local credential files
+.aws/
+*credentials*
+*.pem
+
+# Packer crash logs and caches
+packer_cache/
+*.pkrvars.hcl
+
+# Terraform state and plugin directories
+.terraform/
+*.tfstate
+*.tfstate.backup
+.terraform.lock.hcl
