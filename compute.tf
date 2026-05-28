@@ -1,7 +1,7 @@
-# 1. Register your local WSL public key with the AWS Region
+# 1. Register your local public key via a dynamic input variable
 resource "aws_key_pair" "lab_ssh_key" {
   key_name   = "devops-lab-wsl-key"
-  public_key = file("~/.ssh/devops_lab_key.pub") # Dynamically reads your local file
+  public_key = var.ssh_public_key # <--- Swapped to a standard variable reference
 }
 
 # 1. Define an Isolated Firewall Guard (Security Group)
