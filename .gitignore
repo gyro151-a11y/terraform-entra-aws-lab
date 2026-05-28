@@ -12,3 +12,7 @@ packer_cache/
 *.tfstate
 *.tfstate.backup
 .terraform.lock.hcl
+
+*.list
+saml_response.txt
+refresh_creds.sh

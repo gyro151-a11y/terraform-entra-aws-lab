@@ -19,7 +19,7 @@ terraform {
 
 
 
-# Configure the AWS Provider targeting your development region
+## Configure the AWS Provider targeting your development region
 provider "aws" {
   region = "us-east-1"
 }

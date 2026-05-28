@@ -1,0 +1,37 @@
+name: "DevOps Lab Infrastructure Guardrail"
+
+# Trigger this workflow automatically on every git push or pull request to the main branch
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  validate:
+    name: "Lint and Validate IaC"
+    runs-on: ubuntu-latest
+
+    steps:
+    # Step 1: Clone your code out of the GitHub repository onto the runner machine
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    # Step 2: Install HashiCorp's official toolset engine onto the runner
+    - name: Setup HashiCorp Tooling
+      uses: hashicorp/setup-packer-terraform@v3
+      with:
+        terraform_version: "1.5.7"
+        packer_version: "1.10.0"
+
+    # Step 3: Run Validation Gates for Packer
+    - name: Validate Packer Blueprint
+      run: |
+        packer init ubuntu.pkr.hcl
+        packer validate ubuntu.pkr.hcl
+
+    # Step 4: Run Validation Gates for Terraform
+    - name: Validate Terraform Architecture
+      run: |
+        terraform init -backend=false
+        terraform validate
