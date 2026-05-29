@@ -28,6 +28,12 @@
 #   role = aws_iam_role.ssm_role.name
 # }
 
+# Dynamically fetch our secure API token from AWS Parameter Store at runtime
+data "aws_ssm_parameter" "external_api_token" {
+  name            = "/devops-lab/sandbox/api_token"
+  with_decryption = true
+}
+
 # 1. Register your local public key via a dynamic input variable
 resource "aws_key_pair" "lab_ssh_key" {
   key_name   = "devops-lab-wsl-key"
@@ -97,6 +103,16 @@ resource "aws_instance" "web_server" {
   # # Equip the instance with its security badge
   # iam_instance_profile = aws_iam_instance_profile.ssm_profile.name
 
+  user_data = <<-EOF
+              #!/bin/bash
+              echo "=== SYSTEM INITIALIZATION ==="
+              
+              # Ingest the cloud secret into a local system environment variable
+              export API_TOKEN="${data.aws_ssm_parameter.external_api_token.value}"
+              
+              # Masking the secret in the console log for strict security hygiene
+              echo "Secret Token successfully ingested with length: $${#API_TOKEN} characters"
+              EOF
 
   tags = {
     Name        = "devops-lab-web-instance"
