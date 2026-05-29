@@ -9,11 +9,11 @@ terraform {
 
   # Route state files to remote cloud storage
   backend "s3" {
-    bucket         = "devops-lab-state-bucket-629897139637"
-    key            = "global/s3/terraform.tfstate" # The file directory path inside the bucket
-    region         = "us-east-1"
+    bucket = "devops-lab-state-bucket-629897139637"
+    key    = "global/s3/terraform.tfstate" # The file directory path inside the bucket
+    region = "us-east-1"
     # dynamodb_table = "devops-lab-state-locks"       # Activates concurrent execution locking
-    encrypt        = true                           # Encrypts the state file at rest
+    encrypt = true # Encrypts the state file at rest
   }
 }
 

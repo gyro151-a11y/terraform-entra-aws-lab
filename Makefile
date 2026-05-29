@@ -14,11 +14,13 @@ validate:
 
 # Plan and preview what changes Terraform will make to your AWS account
 plan:
-	terraform plan
+	terraform plan -var="ssh_public_key=$$(cat ~/.ssh/devops_lab_key.pub)"
 
 # Deploy the entire live production infrastructure stack to AWS
 deploy:
-	terraform apply -auto-approve
+	terraform fmt
+	terraform validate
+	terraform apply -auto-approve -var="ssh_public_key=$$(cat ~/.ssh/devops_lab_key.pub)"
 
 # Execute the actual image baking pipeline in the cloud
 build:
@@ -27,4 +29,4 @@ build:
 
 # Completely destroy all deployed cloud resources to protect your budget
 destroy:
-	terraform destroy -auto-approve
+	terraform destroy -auto-approve -var="ssh_public_key=$$(cat ~/.ssh/devops_lab_key.pub)"

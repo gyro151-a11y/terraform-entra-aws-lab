@@ -1,7 +1,7 @@
 # 1. Secure Remote State Storage Bucket
 resource "aws_s3_bucket" "state_bucket" {
   bucket        = "devops-lab-state-bucket-629897139637" # S3 names must be globally unique
-  force_destroy = true # Allows easy clean up via 'make destroy' later
+  force_destroy = true                                   # Allows easy clean up via 'make destroy' later
 
   tags = {
     Name = "devops-lab-terraform-state"

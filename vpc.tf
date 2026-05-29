@@ -50,3 +50,62 @@ resource "aws_route_table_association" "public_assoc" {
   subnet_id      = aws_subnet.public_subnet.id
   route_table_id = aws_route_table.public_rt.id
 }
+
+# ==========================================
+# ENTERPRISE ZERO-TRUST TIERS
+# ==========================================
+
+# 1. The Isolated Private Subnet
+resource "aws_subnet" "private_subnet" {
+  vpc_id            = aws_vpc.lab_vpc.id
+  cidr_block        = "10.0.2.0/24" # Distinct CIDR room away from public space
+  availability_zone = "us-east-1a"
+
+  # Ensure instances spawned here never receive an automatic public IP
+  map_public_ip_on_launch = false
+
+  tags = {
+    Name = "devops-lab-private-subnet"
+  }
+}
+
+# 2. Allocate a Static IP (Elastic IP) dedicated for the NAT Gateway
+resource "aws_eip" "nat_eip" {
+  domain     = "vpc"
+  depends_on = [aws_internet_gateway.lab_igw] # Ensures clean ordering sequence
+
+  tags = {
+    Name = "devops-lab-nat-eip"
+  }
+}
+
+# 3. Deploy the NAT Gateway inside the PUBLIC room so it can talk outward
+resource "aws_nat_gateway" "lab_nat" {
+  allocation_id = aws_eip.nat_eip.id
+  subnet_id     = aws_subnet.public_subnet.id # MUST sit inside the public tier
+
+  tags = {
+    Name = "devops-lab-nat-gateway"
+  }
+}
+
+# 4. Create a dedicated signpost Routing Table for the private space
+resource "aws_route_table" "private_rt" {
+  vpc_id = aws_vpc.lab_vpc.id
+
+  # Outbound route: All internet traffic gets securely funneled through the NAT
+  route {
+    cidr_block     = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.lab_nat.id
+  }
+
+  tags = {
+    Name = "devops-lab-private-rt"
+  }
+}
+
+# 5. Bind the Private Subnet to its new Routing Table
+resource "aws_route_table_association" "private_assoc" {
+  subnet_id      = aws_subnet.private_subnet.id
+  route_table_id = aws_route_table.private_rt.id
+}

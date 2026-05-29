@@ -1,3 +1,33 @@
+# # 1. Create an IAM Assume Role Policy that allows EC2 to use this identity
+# resource "aws_iam_role" "ssm_role" {
+#   name = "devops-lab-ssm-instance-role"
+# 
+#   assume_role_policy = jsonencode({
+#     Version = "2012-10-17"
+#     Statement = [
+#       {
+#         Action = "sts:AssumeRole"
+#         Effect = "Allow"
+#         Principal = {
+#           Service = "ec2.amazonaws.com"
+#         }
+#       }
+#     ]
+#   })
+# }
+# 
+# # 2. Attach Amazon's Official Managed Core SSM Policy to the Role
+# resource "aws_iam_role_policy_attachment" "ssm_attach" {
+#   role       = aws_iam_role.ssm_role.name
+#   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+# }
+# 
+# # 3. Wrap the Role inside an Instance Profile container so EC2 can physically wear it
+# resource "aws_iam_instance_profile" "ssm_profile" {
+#   name = "devops-lab-ssm-profile"
+#   role = aws_iam_role.ssm_role.name
+# }
+
 # 1. Register your local public key via a dynamic input variable
 resource "aws_key_pair" "lab_ssh_key" {
   key_name   = "devops-lab-wsl-key"
@@ -10,12 +40,20 @@ resource "aws_security_group" "web_sg" {
   description = "Allow baseline administrative traffic into our instance"
   vpc_id      = aws_vpc.lab_vpc.id # Links directly to your live network container
 
-  # Inbound Rule: Allow secure SSH terminal connections
+  # Inbound Rule 1: Allow secure SSH terminal connections
   ingress {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"] # Open universally for lab validation mapping
+  }
+
+  # Inbound Rule 2: Allow all resources INSIDE the VPC to talk to each other
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["10.0.0.0/16"] # Maps the entire scope of your local network
   }
 
   # Outbound Rule: Let the server download internal software packages freely
@@ -31,17 +69,34 @@ resource "aws_security_group" "web_sg" {
   }
 }
 
+# Temporary public jump box for zero-trust network verification
+resource "aws_instance" "jump_box" {
+  ami                    = "ami-0f3f80eef773db04e" # Same custom baseline image
+  instance_type          = "t3.micro"
+  subnet_id              = aws_subnet.public_subnet.id # <--- Placed in PUBLIC tier
+  vpc_security_group_ids = [aws_security_group.web_sg.id]
+  key_name               = aws_key_pair.lab_ssh_key.key_name
+
+  tags = {
+    Name = "devops-lab-public-jump-box"
+  }
+}
+
 # 2. Launch the Virtual Server using your Custom Golden Image
 resource "aws_instance" "web_server" {
-  ami           = "ami-0f3f80eef773db04e" # <--- Verified baseline AMI from Phase 2!
-  instance_type = "t3.micro"               # Aligns with modern free-tier accounts
-  subnet_id     = aws_subnet.public_subnet.id # Places the server inside your public room
-  
+  ami           = "ami-0f3f80eef773db04e"      # <--- Verified baseline AMI from Phase 2!
+  instance_type = "t3.micro"                   # Aligns with modern free-tier accounts
+  subnet_id     = aws_subnet.private_subnet.id # Places the server inside your private room
+
   # Attach the Firewall Guard rules we defined right above
   vpc_security_group_ids = [aws_security_group.web_sg.id]
 
   # Inject the key pair configuration
-  key_name               = aws_key_pair.lab_ssh_key.key_name
+  key_name = aws_key_pair.lab_ssh_key.key_name
+
+  # # Equip the instance with its security badge
+  # iam_instance_profile = aws_iam_instance_profile.ssm_profile.name
+
 
   tags = {
     Name        = "devops-lab-web-instance"
