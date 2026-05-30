@@ -51,7 +51,7 @@ resource "aws_security_group" "web_sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = var.admin_ssh_cidr
+    cidr_blocks = [var.admin_ssh_cidr]
     description = "Allow baseline inbound SSH"
   }
 
@@ -105,8 +105,8 @@ resource "aws_instance" "jump_box" {
 
 # 2. Launch the Virtual Server using your Custom Golden Image
 resource "aws_instance" "web_server" {
-  ami           = var.ami_id                      # <--- Verified baseline AMI from Phase 2!
-  instance_type = var.instance_type                   # Aligns with modern free-tier accounts
+  ami           = var.ami_id                   # <--- Verified baseline AMI from Phase 2!
+  instance_type = var.instance_type            # Aligns with modern free-tier accounts
   subnet_id     = aws_subnet.private_subnet.id # Places the server inside your private room
 
   # Attach the Firewall Guard rules we defined right above

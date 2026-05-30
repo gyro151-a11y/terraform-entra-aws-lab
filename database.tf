@@ -21,19 +21,19 @@ resource "aws_db_subnet_group" "db_subnet_group" {
 
 # 3. Create an isolated, micro-tier PostgreSQL instance (Decoupled Data Tier)
 resource "aws_db_instance" "postgres_db" {
-  identifier             = "devops-lab-postgres"
-  allocated_storage      = 20
-  max_allocated_storage  = 100
-  engine                 = "postgres"
-  engine_version         = "15.4"
-  instance_class         = var.db_instance_class # Cost-effective, high-performance ARM tier
-  storage_encrypted      = true
-  db_name                = "spatuladb"
-  
+  identifier            = "devops-lab-postgres"
+  allocated_storage     = 20
+  max_allocated_storage = 100
+  engine                = "postgres"
+  engine_version        = "15.7"
+  instance_class        = var.db_instance_class # Cost-effective, high-performance ARM tier
+  storage_encrypted     = true
+  db_name               = "spatuladb"
+
   # Credentials managed over internal AWS control plane via security token parameters
-  username               = "db_admin"
-  password               = data.aws_ssm_parameter.external_api_token.value # Reusing your secret parameter!
-  
+  username = "db_admin"
+  password = data.aws_ssm_parameter.external_api_token.value # Reusing your secret parameter!
+
   db_subnet_group_name   = aws_db_subnet_group.db_subnet_group.name
   vpc_security_group_ids = [aws_security_group.db_sg.id]
   skip_final_snapshot    = true # Ensures clean, fast destruction in our sandbox environment

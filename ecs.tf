@@ -72,7 +72,7 @@ resource "aws_ecs_task_definition" "app_task" {
       name      = "spatula-web-app"
       image     = "nginx:alpine" # Bootstrapping a clean, stateless web engine proxy
       essential = true
-      
+
       portMappings = [
         {
           containerPort = 80
@@ -119,7 +119,7 @@ resource "aws_ecs_service" "app_service" {
 
   network_configuration {
     subnets          = [aws_subnet.private_subnet.id]
-    security_groups = [aws_security_group.web_sg.id] # Shares firewall policies with web tier
-    assign_public_ip = false # Pinned strictly in our isolated room away from the internet
+    security_groups  = [aws_security_group.web_sg.id] # Shares firewall policies with web tier
+    assign_public_ip = false                          # Pinned strictly in our isolated room away from the internet
   }
 }
