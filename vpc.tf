@@ -109,3 +109,31 @@ resource "aws_route_table_association" "private_assoc" {
   subnet_id      = aws_subnet.private_subnet.id
   route_table_id = aws_route_table.private_rt.id
 }
+
+
+# Strict firewall isolation for the private database tier
+resource "aws_security_group" "db_sg" {
+  name        = "devops-lab-db-sg"
+  description = "Allow inbound PostgreSQL traffic strictly from the web server tier"
+  vpc_id      = aws_vpc.lab_vpc.id
+
+  ingress {
+    description     = "PostgreSQL access from web security group"
+    from_port       = 5432
+    to_port         = 5432
+    protocol        = "tcp"
+    security_groups = [aws_security_group.web_sg.id] # Tight source-mapping constraint
+  }
+
+  egress {
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
+  tags = {
+    Name = "devops-lab-database-sg"
+  }
+}
