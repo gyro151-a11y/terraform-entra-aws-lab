@@ -1,12 +1,12 @@
 # 1. Create the Isolated VPC Container
 resource "aws_vpc" "lab_vpc" {
-  cidr_block           = "10.0.0.0/16"
+  cidr_block           = var.vpc_cidr
   enable_dns_hostnames = true
   enable_dns_support   = true
 
   tags = {
     Name        = "devops-lab-vpc"
-    Environment = "sandbox"
+    Environment = "var.environment"
   }
 }
 
@@ -22,8 +22,8 @@ resource "aws_internet_gateway" "lab_igw" {
 # 3. Carve Out a Public Subnet for Public-Facing Systems
 resource "aws_subnet" "public_subnet" {
   vpc_id                  = aws_vpc.lab_vpc.id
-  cidr_block              = "10.0.1.0/24"
-  availability_zone       = "us-east-1a"
+  cidr_block              = var.public_subnet_cidr
+  availability_zone       = "${var.aws_region}a"
   map_public_ip_on_launch = true
 
   tags = {
@@ -58,8 +58,8 @@ resource "aws_route_table_association" "public_assoc" {
 # 1. The Isolated Private Subnet
 resource "aws_subnet" "private_subnet" {
   vpc_id            = aws_vpc.lab_vpc.id
-  cidr_block        = "10.0.2.0/24" # Distinct CIDR room away from public space
-  availability_zone = "us-east-1a"
+  cidr_block        = var.private_subnet_a_cidr # Distinct CIDR room away from public space
+  availability_zone = "${var.aws_region}a"
 
   # Ensure instances spawned here never receive an automatic public IP
   map_public_ip_on_launch = false

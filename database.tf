@@ -1,8 +1,8 @@
 # 1. Provision a secondary private subnet in a separate Availability Zone for database high-availability
 resource "aws_subnet" "private_subnet_b" {
   vpc_id            = aws_vpc.lab_vpc.id
-  cidr_block        = "10.0.3.0/24"
-  availability_zone = "us-east-1b"
+  cidr_block        = var.private_subnet_b_cidr
+  availability_zone = "${var.aws_region}b"
 
   tags = {
     Name = "devops-lab-private-subnet-b"
@@ -26,7 +26,7 @@ resource "aws_db_instance" "postgres_db" {
   max_allocated_storage  = 100
   engine                 = "postgres"
   engine_version         = "15.4"
-  instance_class         = "db.t4g.micro" # Cost-effective, high-performance ARM tier
+  instance_class         = var.db_instance_class # Cost-effective, high-performance ARM tier
   db_name                = "spatuladb"
   
   # Credentials managed over internal AWS control plane via security token parameters
