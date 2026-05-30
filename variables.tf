@@ -44,3 +44,15 @@ variable "db_instance_class" {
   description = "Compute hardware tier sizing allocation for the managed RDS engine"
   default     = "db.t4g.micro"
 }
+
+variable "instance_type" {
+  type        = string
+  description = "The virtual hardware sizing allocation for baseline compute EC2 instances"
+  default     = "t3.micro"
+}
+
+variable "ami_id" {
+  type        = string
+  description = "The target Amazon Machine Image (AMI) ID used to boot virtual machine nodes"
+  default     = "ami-0f3f80eef773db04e" # Baseline Ubuntu/AL2 depending on your region template
+}

@@ -93,7 +93,7 @@ resource "aws_ecs_task_definition" "app_task" {
         logDriver = "awslogs"
         options = {
           "awslogs-group"         = "/ecs/devops-lab-app"
-          "awslogs-region"        = "us-east-1"
+          "awslogs-region"        = var.aws_region
           "awslogs-stream-prefix" = "web"
         }
       }
