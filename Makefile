@@ -16,6 +16,11 @@ validate:
 plan:
 	terraform plan -var="ssh_public_key=$$(cat ~/.ssh/devops_lab_key.pub)"
 
+# Run static application security testing (SAST) compliance scans
+lint:
+	@echo "=== Running Trivy Security Linting ==="
+	trivy config .
+
 # Deploy the entire live production infrastructure stack to AWS
 deploy:
 	terraform fmt

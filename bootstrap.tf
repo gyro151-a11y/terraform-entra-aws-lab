@@ -8,6 +8,15 @@ resource "aws_s3_bucket" "state_bucket" {
   }
 }
 
+# Hardens the S3 State Bucket by completely blocking all public avenues
+resource "aws_s3_bucket_public_access_block" "state_bucket_acl_block" {
+  bucket                  = aws_s3_bucket.state_bucket.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
 # Enable Object Versioning to track changes and prevent corruption
 resource "aws_s3_bucket_versioning" "state_versioning" {
   bucket = aws_s3_bucket.state_bucket.id

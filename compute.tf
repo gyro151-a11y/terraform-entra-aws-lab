@@ -51,7 +51,8 @@ resource "aws_security_group" "web_sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"] # Open universally for lab validation mapping
+    cidr_blocks = var.admin_ssh_cidr
+    description = "Allow baseline inbound SSH"
   }
 
   # Inbound Rule 2: Allow all resources INSIDE the VPC to talk to each other
@@ -60,6 +61,7 @@ resource "aws_security_group" "web_sg" {
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["10.0.0.0/16"] # Maps the entire scope of your local network
+    description = "Allow open internal VPC communication"
   }
 
   # Outbound Rule: Let the server download internal software packages freely
@@ -68,6 +70,7 @@ resource "aws_security_group" "web_sg" {
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow outbound for update/software download"
   }
 
   tags = {
@@ -82,6 +85,18 @@ resource "aws_instance" "jump_box" {
   subnet_id              = aws_subnet.public_subnet.id # <--- Placed in PUBLIC tier
   vpc_security_group_ids = [aws_security_group.web_sg.id]
   key_name               = aws_key_pair.lab_ssh_key.key_name
+
+  # FIXES AWS-0028: Enforce IMDSv2 tokens
+  metadata_options {
+    http_endpoint = "enabled"
+    http_tokens   = "required" # Explicitly mandate session tokens
+  }
+
+  # FIXES AWS-0131: Encrypt hard drive
+  root_block_device {
+    encrypted   = true # FIXED: Encrypts the OS drive using the free default AWS managed key
+    volume_type = "gp3"
+  }
 
   tags = {
     Name = "devops-lab-public-jump-box"
@@ -99,6 +114,18 @@ resource "aws_instance" "web_server" {
 
   # Inject the key pair configuration
   key_name = aws_key_pair.lab_ssh_key.key_name
+
+  # FIXES AWS-0028: Enforce IMDSv2 tokens
+  metadata_options {
+    http_endpoint = "enabled"
+    http_tokens   = "required" # Explicitly mandate session tokens
+  }
+
+  # FIXES AWS-0131: Encrypt hard drive
+  root_block_device {
+    encrypted   = true # FIXED: Encrypts the OS drive using the free default AWS managed key
+    volume_type = "gp3"
+  }
 
   # # Equip the instance with its security badge
   # iam_instance_profile = aws_iam_instance_profile.ssm_profile.name

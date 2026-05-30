@@ -56,3 +56,8 @@ variable "ami_id" {
   description = "The target Amazon Machine Image (AMI) ID used to boot virtual machine nodes"
   default     = "ami-0f3f80eef773db04e" # Baseline Ubuntu/AL2 depending on your region template
 }
+
+variable "admin_ssh_cidr" {
+  type        = string
+  description = "The specific public IP or corporate CIDR block allowed to initiate SSH administrative connections"
+}

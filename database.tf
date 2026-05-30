@@ -27,6 +27,7 @@ resource "aws_db_instance" "postgres_db" {
   engine                 = "postgres"
   engine_version         = "15.4"
   instance_class         = var.db_instance_class # Cost-effective, high-performance ARM tier
+  storage_encrypted      = true
   db_name                = "spatuladb"
   
   # Credentials managed over internal AWS control plane via security token parameters
