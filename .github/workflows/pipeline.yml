@@ -1,0 +1,37 @@
+name: "DevSecOps Infrastructure Quality Gate"
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  security-and-validation:
+    name: "Audit & Lint"
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Securely checkout the code from GitHub into the cloud runner workspace
+      - name: Checkout Codebase
+        uses: actions/checkout@v4
+
+      # Step 2: Initialize Terraform inside the clean runner environment
+      - name: Setup Terraform Compiler
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.5.7"
+
+      # Step 3: Run the format check to ensure clean, standardized syntax styling
+      - name: Verify HCL Formatting Style
+        run: terraform fmt -check
+
+      # Step 4: Run the native security audit engine (Trivy Action)
+      - name: Execute Trivy Static Security Scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'config'
+          hide-progress: false
+          format: 'table'
+          exit-code: '1' # CRITICAL: Forces the pipeline to crash if vulnerabilities exist
+          severity: 'HIGH,CRITICAL'
