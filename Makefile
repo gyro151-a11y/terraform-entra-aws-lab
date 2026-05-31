@@ -35,3 +35,11 @@ build:
 # Completely destroy all deployed cloud resources to protect your budget
 destroy:
 	terraform destroy -auto-approve -var="ssh_public_key=$$(cat ~/.ssh/devops_lab_key.pub)"
+
+# Chaos engineering test to view running tasks
+ecs-list:
+	aws ecs list-tasks --cluster devops-lab-ecs-cluster --region us-east-1
+
+# Chaos engineering test to kill a specific task (Usage: make ecs-kill task=ID)
+ecs-kill:
+	aws ecs stop-task --cluster devops-lab-ecs-cluster --task $(task) --reason "Simulated crash" --region us-east-1

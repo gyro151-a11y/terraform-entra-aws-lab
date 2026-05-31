@@ -64,6 +64,15 @@ resource "aws_security_group" "web_sg" {
     description = "Allow open internal VPC communication"
   }
 
+  # Inbound Rule 3: Allow HTTP traffic from within the VPC network boundary
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["10.0.0.0/16"]
+    description = "Allow internal HTTP traffic to containers"
+  }
+
   # Outbound Rule: Let the server download internal software packages freely
   # trivy:ignore:AVD-AWS-0104
   egress {
