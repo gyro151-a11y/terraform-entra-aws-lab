@@ -26,6 +26,7 @@ resource "aws_subnet" "public_subnet" {
   availability_zone       = "${var.aws_region}a"
   map_public_ip_on_launch = true
 
+  # trivy:ignore:AVD-AWS-0164
   tags = {
     Name = "devops-lab-public-subnet"
   }

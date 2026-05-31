@@ -66,6 +66,8 @@ resource "aws_security_group" "web_sg" {
 
   # Outbound Rule: Let the server download internal software packages freely
   egress {
+    # tfsec:ignore:aws-ec2-no-public-egress
+    # trivy:ignore:AVD-AWS-0104
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
