@@ -20,13 +20,13 @@ resource "aws_internet_gateway" "lab_igw" {
 }
 
 # 3. Carve Out a Public Subnet for Public-Facing Systems
+ # trivy:ignore:AVD-AWS-0164
 resource "aws_subnet" "public_subnet" {
   vpc_id                  = aws_vpc.lab_vpc.id
   cidr_block              = var.public_subnet_cidr
   availability_zone       = "${var.aws_region}a"
   map_public_ip_on_launch = true
 
-  # trivy:ignore:AVD-AWS-0164
   tags = {
     Name = "devops-lab-public-subnet"
   }
