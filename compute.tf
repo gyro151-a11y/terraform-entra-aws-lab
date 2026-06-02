@@ -28,6 +28,7 @@
 #   role = aws_iam_role.ssm_role.name
 # }
 
+
 # Dynamically fetch our secure API token from AWS Parameter Store at runtime
 data "aws_ssm_parameter" "external_api_token" {
   name            = "/devops-lab/sandbox/api_token"
