@@ -22,6 +22,7 @@ resource "aws_db_subnet_group" "db_subnet_group" {
 # 3. Create an isolated, micro-tier PostgreSQL instance (Decoupled Data Tier)
 #trivy:ignore:aws-0078 Accepted Risk: Default AWS-managed encryption key is sufficient; custom KMS key skipped to avoid static sandbox infrastructure costs
 #trivy:ignore:aws-0077 Accepted Risk: Reduced to 1 backup copy to align with free tier limits, reasonable for learning lab
+#trivy:ignore:aws-0177 Accepted Risk: Temporary disable to allow destroy sequence
 resource "aws_db_instance" "postgres_db" {
   identifier            = "devops-lab-postgres"
   allocated_storage     = 20
