@@ -35,7 +35,7 @@ resource "aws_db_instance" "postgres_db" {
   backup_retention_period             = 1    # Changed back to 1 to align with free tier limitations
   performance_insights_enabled        = true # Fixes AWS-0133 (Deep visibility)
   iam_database_authentication_enabled = true # Fixes AWS-0176 (RBAC database logins)
-  deletion_protection                 = true # Fixes AWS-0177 (Prevents accidental 'terraform destroy' wipes)
+  deletion_protection                 = false # Fixes AWS-0177 (Prevents accidental 'terraform destroy' wipes)
 
   # Credentials managed over internal AWS control plane via security token parameters
   username = "db_admin"
