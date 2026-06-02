@@ -42,7 +42,7 @@ jobs:
 
       # Step 5: Security Static Analysis Scan (Trivy)
       - name: Security Scan (Trivy)
-        uses: aquasecurity/trivy-action@0.70.0
+        uses: aquasecurity/trivy-action@0.25.0
         with:
           scan-type: 'config'
           hide-progress: true
