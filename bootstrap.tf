@@ -1,4 +1,5 @@
 # 1. Secure Remote State Storage Bucket
+#trivy:ignore:aws-0089 Acccepted Risk: Access logging disabled for standalone cost-conscious learning lab
 resource "aws_s3_bucket" "state_bucket" {
   bucket        = "devops-lab-state-bucket-629897139637" # S3 names must be globally unique
   force_destroy = true                                   # Allows easy clean up via 'make destroy' later

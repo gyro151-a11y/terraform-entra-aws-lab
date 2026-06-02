@@ -30,6 +30,11 @@ resource "aws_db_instance" "postgres_db" {
   storage_encrypted     = true
   db_name               = "spatuladb"
 
+  backup_retention_period             = 7    # Fixes AWS-0077 (Extends past default 1-day)
+  performance_insights_enabled        = true # Fixes AWS-0133 (Deep visibility)
+  iam_database_authentication_enabled = true # Fixes AWS-0176 (RBAC database logins)
+  deletion_protection                 = true # Fixes AWS-0177 (Prevents accidental 'terraform destroy' wipes)
+
   # Credentials managed over internal AWS control plane via security token parameters
   username = "db_admin"
   password = data.aws_ssm_parameter.external_api_token.value # Reusing your secret parameter!

@@ -102,6 +102,7 @@ resource "aws_ecs_task_definition" "app_task" {
 }
 
 # CloudWatch Log Group to capture standard out stream from our stateless container
+#trivy:ignore:aws-0017 Accepted Risk: Native AWS encryption is active; custom KMS key skipped to avoid static hourly charges
 resource "aws_cloudwatch_log_group" "ecs_logs" {
   name              = "/ecs/devops-lab-app"
   retention_in_days = 3 # Automatically purges logs to keep storage costs zeroed out
