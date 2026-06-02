@@ -8,6 +8,9 @@ on:
     branches:
       - main
 
+env:
+  TF_VAR_ssh_public_key: ${{ secrets.SSH_PUBLIC_KEY }}
+  
 permissions:
   id-token: write # MANDATORY for Zero Trust cryptographic OIDC handshake tokens
   contents: read  # MANDATORY to securely pull down your repository code
