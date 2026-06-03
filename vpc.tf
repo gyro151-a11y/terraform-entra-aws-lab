@@ -168,3 +168,21 @@ resource "aws_iam_role_policy" "vpc_flow_log_policy" {
     }]
   })
 }
+
+resource "aws_ssm_parameter" "public_subnet_one" {
+  name  = "/devops-lab/vpc/public-subnet-1"
+  type  = "String"
+  value = aws_subnet.public[0].id
+}
+
+resource "aws_ssm_parameter" "public_subnet_two" {
+  name  = "/devops-lab/vpc/public-subnet-2"
+  type  = "String"
+  value = aws_subnet.public[1].id
+}
+
+resource "aws_ssm_parameter" "vpc_id" {
+  name  = "/devops-lab/vpc/id"
+  type  = "String"
+  value = aws_vpc.main.id
+}
