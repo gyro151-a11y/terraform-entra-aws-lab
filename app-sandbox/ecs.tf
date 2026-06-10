@@ -129,6 +129,7 @@ resource "aws_ecs_service" "app_service" {
     assign_public_ip = false                          # Pinned strictly in our isolated room away from the internet
   }
 
+
   # Automatically wire the container ENI straight to the ALB target loop
   load_balancer {
     # Dynamically inject the target group ARN extracted from your CloudFormation Outputs
