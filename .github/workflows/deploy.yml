@@ -55,7 +55,14 @@ jobs:
           ignore-unfixed: true
 
       - name: Terraform Plan
-        run: terraform plan -no-color
+        id: plan
+        run: terraform plan -no-color -out=tfplan
+        continue-on-error: false
+      - name: Upload Terraform Plan
+        uses: actions/upload-artifact@v3
+        with:
+          name: tfplan
+          path: ./app-sandbox/tfplan
 
   deploy:
     name: "Terraform Apply"
@@ -90,6 +97,12 @@ jobs:
 
       - name: Terraform Init
         run: terraform init
+
+      - name: Download Terraform Plan
+        uses: actions/download-artifact@v3
+        with:
+          name: tfplan
+          path: ./app-sandbox
         
       - name: Terraform Apply  
-        run: terraform apply -auto-approve -no-color
+        run: terraform apply -auto-approve -no-color tfplan
