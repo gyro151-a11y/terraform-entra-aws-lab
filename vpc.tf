@@ -19,7 +19,7 @@ resource "aws_internet_gateway" "lab_igw" {
   }
 }
 
-# 3. Carve Out a Public Subnet for Public-Facing Systems
+# 3a. Carve Out a Public Subnet for Public-Facing Systems
 # trivy:ignore:AVD-AWS-0164
 resource "aws_subnet" "public_subnet" {
   vpc_id                  = aws_vpc.lab_vpc.id
@@ -28,7 +28,20 @@ resource "aws_subnet" "public_subnet" {
   map_public_ip_on_launch = true
 
   tags = {
-    Name = "devops-lab-public-subnet"
+    Name = "devops-lab-public-subnet-a"
+  }
+}
+
+# 3b. Carve Out a secondary Public Subnet for Public-Facing Systems (Necessary for ALB)
+# trivy:ignore:AVD-AWS-0164
+resource "aws_subnet" "public_subnet_b" {
+  vpc_id                  = aws_vpc.lab_vpc.id
+  cidr_block              = var.public_subnet_b_cidr
+  availability_zone       = "${var.aws_region}b"
+  map_public_ip_on_launch = true
+
+  tags = {
+    Name = "devops-lab-public-subnet-b"
   }
 }
 
@@ -46,9 +59,15 @@ resource "aws_route_table" "public_rt" {
   }
 }
 
-# 5. Bind the Subnet to the Traffic Route Table
+# 5a. Bind Subnet A to the Traffic Route Table
 resource "aws_route_table_association" "public_assoc" {
   subnet_id      = aws_subnet.public_subnet.id
+  route_table_id = aws_route_table.public_rt.id
+}
+
+# 5b. Bind Subnet B to the Traffic Route Table
+resource "aws_route_table_association" "public_assoc_b" {
+  subnet_id      = aws_subnet.public_subnet_b.id
   route_table_id = aws_route_table.public_rt.id
 }
 
@@ -169,20 +188,24 @@ resource "aws_iam_role_policy" "vpc_flow_log_policy" {
   })
 }
 
+# ==============================================================================
+# SYSTEMS MANAGER (SSM) PARAMETER STORE BRIDGES FOR CLOUDFORMATION
+# ==============================================================================
+
 resource "aws_ssm_parameter" "public_subnet_one" {
   name  = "/devops-lab/vpc/public-subnet-1"
   type  = "String"
-  value = aws_subnet.public[0].id
+  value = aws_subnet.public_subnet.id
 }
 
 resource "aws_ssm_parameter" "public_subnet_two" {
   name  = "/devops-lab/vpc/public-subnet-2"
   type  = "String"
-  value = aws_subnet.public[1].id
+  value = aws_subnet.public_subnet_b.id
 }
 
 resource "aws_ssm_parameter" "vpc_id" {
   name  = "/devops-lab/vpc/id"
   type  = "String"
-  value = aws_vpc.main.id
+  value = aws_vpc.lab_vpc.id
 }

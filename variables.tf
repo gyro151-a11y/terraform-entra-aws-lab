@@ -23,8 +23,14 @@ variable "vpc_cidr" {
 
 variable "public_subnet_cidr" {
   type        = string
-  description = "CIDR block allocation for the public subnet zone"
+  description = "CIDR block allocation for public subnet A zone"
   default     = "10.0.1.0/24"
+}
+
+variable "public_subnet_b_cidr" {
+  type        = string
+  description = "CIDR block allocation for public subnet B zone"
+  default     = "10.0.10.0/24"
 }
 
 variable "private_subnet_a_cidr" {
