@@ -10,6 +10,7 @@ resource "aws_vpc" "lab_vpc" {
   }
 }
 
+
 # 2. Build an Internet Gateway (The Cloud Router Door)
 resource "aws_internet_gateway" "lab_igw" {
   vpc_id = aws_vpc.lab_vpc.id
