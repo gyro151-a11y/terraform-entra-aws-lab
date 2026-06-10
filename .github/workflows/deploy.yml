@@ -59,7 +59,7 @@ jobs:
         run: terraform plan -no-color -out=tfplan
         continue-on-error: false
       - name: Upload Terraform Plan
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: tfplan
           path: ./app-sandbox/tfplan
@@ -99,7 +99,7 @@ jobs:
         run: terraform init
 
       - name: Download Terraform Plan
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: tfplan
           path: ./app-sandbox
