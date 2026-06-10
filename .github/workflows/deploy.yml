@@ -19,62 +19,72 @@ jobs:
   validate:
     name: "Lint and Validate IaC"
     runs-on: ubuntu-latest
+    # 📁 DEFAULT: Forces all run steps in this job to execute inside the sandbox folder
+    defaults:
+      run:
+        working-directory: ./app-sandbox
 
     steps:
-      # Step 1: Clone the codebase onto the ephemeral GitHub runner
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # Step 2: Zero Trust Identity Exchange Handshake
       - name: Configure AWS Credentials via OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::629897139637:role/devops-lab-github-actions-role
           aws-region: us-east-1
 
-      # Step 3: Install and Initialize the Terraform Engine
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
       - name: Terraform Init
         run: terraform init
 
-      # Step 4: Code Style Compliance Check
       - name: Terraform Format Check
         run: terraform fmt -check
 
-      # Step 5: Security Static Analysis Scan (Trivy)
+      # 🔍 TRIVY TARGET: Point directly to the app-sandbox subdirectory folder
       - name: Security Scan (Trivy)
         uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: 'config'
+          scan-ref: './app-sandbox'
           hide-progress: true
           format: 'table'
-          exit-code: '1' # Gates the build: breaks the pipeline instantly if severe holes exist
+          exit-code: '1'
           ignore-unfixed: true
 
-      # Step 6: Speculative Run (Executes on both PRs and Pushes)
       - name: Terraform Plan
         run: terraform plan -no-color
 
   deploy:
     name: "Terraform Apply"
     runs-on: ubuntu-latest
-    needs: validate # Ensures the 'validate' job must complete successfully before this job runs
+    needs: validate 
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # 📁 DEFAULT: Forces all run steps in this job to execute inside the sandbox folder
+    defaults:
+      run:
+        working-directory: ./app-sandbox
+
     steps:
-      # Step 1: Clone the codebase onto the ephemeral GitHub runner
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # Step 2: Zero Trust Identity Exchange Handshake
       - name: Configure AWS Credentials via OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::629897139637:role/devops-lab-github-actions-role
           aws-region: us-east-1
 
-      # Step 3: Install and Initialize the Terraform Engine
+      # ⚖️ CLOUDFORMATION PATH: Look one directory up (../) to grab the root alb.yaml
+      - name: Deploy Ingress Tier (CloudFormation)
+        run: |
+          aws cloudformation deploy \
+            --template-file ../alb.yaml \
+            --stack-name devops-lab-alb-tier \
+            --region us-east-1
+
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 

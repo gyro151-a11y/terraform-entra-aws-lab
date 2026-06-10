@@ -67,3 +67,9 @@ variable "admin_ssh_cidr" {
   type        = string
   description = "The specific public IP or corporate CIDR block allowed to initiate SSH administrative connections"
 }
+
+variable "allow_db_destruction" {
+  type        = bool
+  description = "Safety toggle to control database deletion protection"
+  default     = false # 🔐 Safe by default for daily development
+}

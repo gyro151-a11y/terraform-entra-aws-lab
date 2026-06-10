@@ -1,3 +1,8 @@
+# Read the active output metadata from your CloudFormation ALB stack
+data "aws_cloudformation_stack" "alb_tier" {
+  name = "devops-lab-alb-tier"
+}
+
 # ==========================================
 # 1. THE CORE CONTAINER MANAGEMENT CLUSTER
 # ==========================================
@@ -122,5 +127,13 @@ resource "aws_ecs_service" "app_service" {
     subnets          = [aws_subnet.private_subnet.id]
     security_groups  = [aws_security_group.web_sg.id] # Shares firewall policies with web tier
     assign_public_ip = false                          # Pinned strictly in our isolated room away from the internet
+  }
+
+  # Automatically wire the container ENI straight to the ALB target loop
+  load_balancer {
+    # Dynamically inject the target group ARN extracted from your CloudFormation Outputs
+    target_group_arn = data.aws_cloudformation_stack.alb_tier.outputs["ALBTargetGroupARN"]
+    container_name   = "spatula-web-app"
+    container_port   = 80
   }
 }

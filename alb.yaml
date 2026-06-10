@@ -1,0 +1,63 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'SOA-C03 Lab: Cross-Framework Application Load Balancer Tier'
+
+Resources:
+  # 🔐 Security Group for the Load Balancer (Ingress Firewall)
+  ALBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: 'Allow public HTTP traffic to ALB'
+      VpcId: !Sub "{{resolve:ssm:/devops-lab/vpc/id}}"
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+
+  # ⚖️ The Application Load Balancer Appliance
+  ApplicationLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: 'devops-lab-alb'
+      Scheme: internet-facing
+      Type: application
+      SecurityGroups:
+        - !Ref ALBSecurityGroup
+      Subnets:
+        - !Sub "{{resolve:ssm:/devops-lab/vpc/public-subnet-1}}"
+        - !Sub "{{resolve:ssm:/devops-lab/vpc/public-subnet-2}}"
+
+  # 🎯 Target Group (Domain 5: Where the ALB will route traffic next)
+  ALBTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: 'devops-lab-targets'
+      HealthCheckPath: '/'
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 5
+      HealthCheckIntervalSeconds: 30
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 5
+      Port: 80
+      Protocol: HTTP
+      TargetType: ip
+      VpcId: !Sub "{{resolve:ssm:/devops-lab/vpc/id}}"
+
+  # 👂 Listener to capture incoming port 80 traffic
+  ALBListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref ALBTargetGroup
+      LoadBalancerArn: !Ref ApplicationLoadBalancer
+      Port: 80
+      Protocol: HTTP
+
+Outputs:
+  ALBURL:
+    Description: 'The public URL of your load balancer'
+    Value: !GetAtt ApplicationLoadBalancer.DNSName
+  ALBTargetGroupARN:
+    Description: 'The ARN of the ALB Target Group for ECS service registration'
+    Value: !Ref ALBTargetGroup
