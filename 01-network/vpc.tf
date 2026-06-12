@@ -90,6 +90,17 @@ resource "aws_subnet" "private_subnet" {
   }
 }
 
+resource "aws_subnet" "private_subnet_b" {
+  vpc_id            = aws_vpc.lab_vpc.id
+  cidr_block        = var.private_subnet_b_cidr # Ensure this variable or string is distinct!
+  availability_zone = "${var.aws_region}b"
+  map_public_ip_on_launch = false
+
+  tags = {
+    Name = "devops-lab-private-subnet-b"
+  }
+}
+
 # 2. Allocate a Static IP (Elastic IP) dedicated for the NAT Gateway
 resource "aws_eip" "nat_eip" {
   domain     = "vpc"
@@ -131,6 +142,18 @@ resource "aws_route_table_association" "private_assoc" {
   route_table_id = aws_route_table.private_rt.id
 }
 
+# Bind the secondary private subnet to your private routing table
+resource "aws_route_table_association" "private_assoc_b" {
+  subnet_id      = aws_subnet.private_subnet_b.id
+  route_table_id = aws_route_table.private_rt.id
+}
+
+# CloudWatch Log Group to capture standard out stream from our stateless container
+#trivy:ignore:aws-0017 Accepted Risk: Native AWS encryption is active; custom KMS key skipped to avoid static hourly charges
+resource "aws_cloudwatch_log_group" "ecs_logs" {
+  name              = "/ecs/devops-lab-app"
+  retention_in_days = 3 # Automatically purges logs to keep storage costs zeroed out
+}
 
 # Strict firewall isolation for the private database tier
 resource "aws_security_group" "db_sg" {
@@ -209,4 +232,99 @@ resource "aws_ssm_parameter" "vpc_id" {
   name  = "/devops-lab/vpc/id"
   type  = "String"
   value = aws_vpc.lab_vpc.id
+}
+
+resource "aws_ssm_parameter" "private_subnet_one" {
+  name  = "/devops-lab/vpc/private-subnet-1"
+  type  = "String"
+  value = aws_subnet.private_subnet.id
+}
+
+resource "aws_ssm_parameter" "private_subnet_two" {
+  name  = "/devops-lab/vpc/private-subnet-2"
+  type  = "String"
+  value = aws_subnet.private_subnet_b.id
+}
+
+
+# ==========================================
+# CORE LAYER 3 FIREWALLS (SECURITY GROUPS)
+# ==========================================
+
+resource "aws_security_group" "web_sg" {
+  name        = "devops-lab-web-sg"
+  description = "Allow inbound routing for administrative and container ingress traffic"
+  vpc_id      = aws_vpc.lab_vpc.id
+
+  # Administrative Access
+  ingress {
+    description = "Allow baseline inbound SSH"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = [var.admin_ssh_cidr]
+  }
+
+  # Container Routing Ingress 
+  ingress {
+    description = "Allow internal HTTP traffic from VPC loop"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["10.0.0.0/16"]
+  }
+
+  ingress {
+    description = "Allow wide internal VPC loop communication"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["10.0.0.0/16"]
+  }
+
+  # Global Outbound
+  egress {
+    description = "Allow all outbound software update payloads"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "devops-lab-firewall"
+  }
+}
+
+/*
+resource "aws_security_group" "db_sg" {
+  name        = "devops-lab-db-sg"
+  description = "Allow inbound PostgreSQL traffic strictly from the web server tier"
+  vpc_id      = aws_vpc.lab_vpc.id
+
+  ingress {
+    description     = "PostgreSQL access from web security group"
+    from_port       = 5432
+    to_port         = 5432
+    protocol        = "tcp"
+    security_groups = [aws_security_group.web_sg.id] # Native inline compilation block
+  }
+
+  tags = {
+    Name = "devops-lab-database-sg"
+  }
+}
+*/
+
+# Expose Security Groups for the application layer to find later
+resource "aws_ssm_parameter" "web_sg_id" {
+  name  = "/devops-lab/network/web-sg-id"
+  type  = "String"
+  value = aws_security_group.web_sg.id
+}
+
+resource "aws_ssm_parameter" "db_sg_id" {
+  name  = "/devops-lab/network/db-sg-id"
+  type  = "String"
+  value = aws_security_group.db_sg.id
 }

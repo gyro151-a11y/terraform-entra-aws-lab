@@ -1,8 +1,3 @@
-# Read the active output metadata from your CloudFormation ALB stack
-data "aws_cloudformation_stack" "alb_tier" {
-  name = "devops-lab-alb-tier"
-}
-
 # ==========================================
 # 1. THE CORE CONTAINER MANAGEMENT CLUSTER
 # ==========================================
@@ -106,16 +101,13 @@ resource "aws_ecs_task_definition" "app_task" {
   ])
 }
 
-# CloudWatch Log Group to capture standard out stream from our stateless container
-#trivy:ignore:aws-0017 Accepted Risk: Native AWS encryption is active; custom KMS key skipped to avoid static hourly charges
-resource "aws_cloudwatch_log_group" "ecs_logs" {
-  name              = "/ecs/devops-lab-app"
-  retention_in_days = 3 # Automatically purges logs to keep storage costs zeroed out
-}
+
 
 # ==========================================
 # 4. THE SERVICE ENGINE (The Orchestrator)
 # ==========================================
+
+
 resource "aws_ecs_service" "app_service" {
   name            = "devops-lab-service"
   cluster         = aws_ecs_cluster.lab_cluster.id
@@ -124,8 +116,8 @@ resource "aws_ecs_service" "app_service" {
   launch_type     = "FARGATE"
 
   network_configuration {
-    subnets          = [aws_subnet.private_subnet.id]
-    security_groups  = [aws_security_group.web_sg.id] # Shares firewall policies with web tier
+    subnets          = [data.aws_ssm_parameter.private_subnet_1.value]
+    security_groups  = [data.aws_ssm_parameter.web_sg_id.value]
     assign_public_ip = false                          # Pinned strictly in our isolated room away from the internet
   }
 

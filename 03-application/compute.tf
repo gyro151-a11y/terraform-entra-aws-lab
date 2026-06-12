@@ -28,74 +28,21 @@
 #   role = aws_iam_role.ssm_role.name
 # }
 
-
-# Dynamically fetch our secure API token from AWS Parameter Store at runtime
-data "aws_ssm_parameter" "external_api_token" {
-  name            = "/devops-lab/sandbox/api_token"
-  with_decryption = true
-}
-
+/*
 # 1. Register your local public key via a dynamic input variable
 resource "aws_key_pair" "lab_ssh_key" {
   key_name   = "devops-lab-wsl-key"
   public_key = var.ssh_public_key # <--- Swapped to a standard variable reference
 }
-
-# 1. Define an Isolated Firewall Guard (Security Group)
-resource "aws_security_group" "web_sg" {
-  name        = "devops-lab-web-sg"
-  description = "Allow baseline administrative traffic into our instance"
-  vpc_id      = aws_vpc.lab_vpc.id # Links directly to your live network container
-
-  # Inbound Rule 1: Allow secure SSH terminal connections
-  ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = [var.admin_ssh_cidr]
-    description = "Allow baseline inbound SSH"
-  }
-
-  # Inbound Rule 2: Allow all resources INSIDE the VPC to talk to each other
-  ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["10.0.0.0/16"] # Maps the entire scope of your local network
-    description = "Allow open internal VPC communication"
-  }
-
-  # Inbound Rule 3: Allow HTTP traffic from within the VPC network boundary
-  ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["10.0.0.0/16"]
-    description = "Allow internal HTTP traffic to containers"
-  }
-
-  # Outbound Rule: Let the server download internal software packages freely
-  # trivy:ignore:AVD-AWS-0104
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "Allow outbound for update/software download"
-  }
-
-  tags = {
-    Name = "devops-lab-firewall"
-  }
-}
+*/
 
 # Temporary public jump box for zero-trust network verification
 resource "aws_instance" "jump_box" {
   ami                    = var.ami_id # Same custom baseline image
   instance_type          = var.instance_type
-  subnet_id              = aws_subnet.public_subnet.id # <--- Placed in PUBLIC tier
-  vpc_security_group_ids = [aws_security_group.web_sg.id]
-  key_name               = aws_key_pair.lab_ssh_key.key_name
+  subnet_id              = data.aws_ssm_parameter.public_subnet_1.value
+  vpc_security_group_ids = [data.aws_ssm_parameter.web_sg_id.value]
+  # key_name               = aws_key_pair.lab_ssh_key.key_name
 
   # FIXES AWS-0028: Enforce IMDSv2 tokens
   metadata_options {
@@ -118,13 +65,13 @@ resource "aws_instance" "jump_box" {
 resource "aws_instance" "web_server" {
   ami           = var.ami_id                   # <--- Verified baseline AMI from Phase 2!
   instance_type = var.instance_type            # Aligns with modern free-tier accounts
-  subnet_id     = aws_subnet.private_subnet.id # Places the server inside your private room
+  subnet_id     = data.aws_ssm_parameter.private_subnet_1.value # Places the server inside your private room
 
   # Attach the Firewall Guard rules we defined right above
-  vpc_security_group_ids = [aws_security_group.web_sg.id]
+  vpc_security_group_ids = [data.aws_ssm_parameter.web_sg_id.value]
 
   # Inject the key pair configuration
-  key_name = aws_key_pair.lab_ssh_key.key_name
+  # key_name = aws_key_pair.lab_ssh_key.key_name
 
   # FIXES AWS-0028: Enforce IMDSv2 tokens
   metadata_options {

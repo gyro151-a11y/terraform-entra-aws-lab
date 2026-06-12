@@ -8,11 +8,15 @@ packer_cache/
 *.pkrvars.hcl
 
 # Terraform state and plugin directories
-.terraform/
+**/.terraform/*
 *.tfstate
-*.tfstate.backup
+*.tfstate.*
 .terraform.lock.hcl
 
 *.list
 saml_response.txt
 refresh_creds.sh
+
+# Local variable overrides (Secrets)
+*.tfvars
+*.tfvars.json
