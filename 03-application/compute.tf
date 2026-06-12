@@ -61,6 +61,7 @@ resource "aws_instance" "jump_box" {
   }
 }
 
+
 # 2. Launch the Virtual Server using your Custom Golden Image
 resource "aws_instance" "web_server" {
   ami           = var.ami_id                   # <--- Verified baseline AMI from Phase 2!
