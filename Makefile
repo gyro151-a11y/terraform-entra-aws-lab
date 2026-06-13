@@ -5,27 +5,27 @@
 .PHONY: init validate plan lint deploy build destroy ecs-list ecs-kill
 
 
-VARS_FLAG = -var="admin_ssh_cidr=$$$$((curl -s http://checkip.amazonaws.com))/32" -var="ssh_public_key=\$$(cat ~/.ssh/devops_lab_key.pub)" -var-file="../terraform.tfvars"
-DESTROY_VARS = -var="allow_db_destruction=true" -var="ssh_public_key=\$$(cat ~/.ssh/devops_lab_key.pub)" -var-file="../terraform.tfvars"
+VARS_FLAG = -var="admin_ssh_cidr=$$$$((curl -s http://checkip.amazonaws.com))/32" -var="ssh_public_key=\$$(cat ~/.ssh/devops_lab_key.pub)"
+DESTROY_VARS = -var="allow_db_destruction=true" -var="ssh_public_key=\$$(cat ~/.ssh/devops_lab_key.pub)"
 
 # Initialize both Terraform and Packer working plugins
 init:
 	packer init ubuntu.pkr.hcl
-	cd core-identity && terraform init
-	cd app-sandbox && terraform init
+	cd 00-bootstrap && terraform init
+	cd 01-network && terraform init
+	cd 03-application && terraform init
 
 # Validate that your code formatting and syntax contain zero errors
-validate:
+validate-all:
 	packer validate ubuntu.pkr.hcl
-	cd core-identity && terraform validate
-	cd app-sandbox && terraform validate
+	cd 01-network && terraform validate
+	cd 03-application && terraform validate
 
-# Plan and preview what changes Terraform will make to your AWS account
-plan-identity:
-	cd core-identity && terraform plan -var="ssh_public_key=$$(cat ~/.ssh/devops_lab_key.pub)"
+	# Runs formatting command against all tf files
+format-all:
+	cd 01-network && terraform fmt -check
+	cd 03-application && terraform fmt -check
 
-plan-app:
-	cd app-sandbox && terraform plan -var="ssh_public_key=$$(cat ~/.ssh/devops_lab_key.pub)"
 
 # Run static application security testing (SAST) compliance scans
 lint:
@@ -34,20 +34,16 @@ lint:
 
 show-alb-status:
 	aws cloudformation describe-stacks \
-  --stack-name devops-lab-alb-tier \
-  --region us-east-1 \
-  --query "Stacks[0].StackStatus"
+		--stack-name devops-lab-alb-tier \
+  		--region us-east-1 \
+  		--query "Stacks[0].StackStatus"
 
 show-alb-log:
 	aws cloudformation describe-stack-events \
-  --stack-name devops-lab-alb-tier \
-  --region us-east-1 \
-  --query "StackEvents[?ResourceStatus=='CREATE_FAILED'].{Resource:LogicalResourceId,Type:ResourceType,Reason:ResourceStatusReason}" \
-  --output table
-
-# Deploy the entire live production infrastructure stack to AWS
-deploy-identity:
-	cd core-identity && terraform apply -auto-approve -var="ssh_public_key=$$(cat ~/.ssh/devops_lab_key.pub)"
+  		--stack-name devops-lab-alb-tier \
+  		--region us-east-1 \
+ 		--query "StackEvents[?ResourceStatus=='CREATE_FAILED'].{Resource:LogicalResourceId,Type:ResourceType,Reason:ResourceStatusReason}" \
+  		--output table
 
 deploy-all:
 	@echo "🌐 Phase 1: Deploying Network Foundation and Base Firewalls..."
@@ -68,6 +64,7 @@ deploy-all:
 	@echo "🚀 Phase 3: Launching Decoupled Application and Database Tiers..."
 	cd 03-application && terraform init -reconfigure && terraform apply $(VARS_FLAG) --auto-approve
 	@echo "✅ Deployment completely finalized! Your sandbox is live."
+
 # Execute the actual image baking pipeline in the cloud
 build:
 	packer init ubuntu.pkr.hcl

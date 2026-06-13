@@ -34,6 +34,6 @@ data "aws_ssm_parameter" "private_subnet_2" {
 }
 
 # Read the active output metadata from your CloudFormation ALB stack
- data "aws_cloudformation_stack" "alb_tier" {
-   name = "devops-lab-alb-tier"
- }
+data "aws_cloudformation_stack" "alb_tier" {
+  name = "devops-lab-alb-tier"
+}

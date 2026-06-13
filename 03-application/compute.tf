@@ -64,8 +64,8 @@ resource "aws_instance" "jump_box" {
 
 # 2. Launch the Virtual Server using your Custom Golden Image
 resource "aws_instance" "web_server" {
-  ami           = var.ami_id                   # <--- Verified baseline AMI from Phase 2!
-  instance_type = var.instance_type            # Aligns with modern free-tier accounts
+  ami           = var.ami_id                                    # <--- Verified baseline AMI from Phase 2!
+  instance_type = var.instance_type                             # Aligns with modern free-tier accounts
   subnet_id     = data.aws_ssm_parameter.private_subnet_1.value # Places the server inside your private room
 
   # Attach the Firewall Guard rules we defined right above

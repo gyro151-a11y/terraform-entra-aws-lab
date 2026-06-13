@@ -9,10 +9,10 @@ terraform {
 
   # Route state files to remote cloud storage
   backend "s3" {
-    bucket = "jeff-edgar-devops-lab-state"
-    key    = "state/application.tfstate" # The file directory path inside the bucket
-    region = "us-east-1"
-    encrypt = true # Encrypts the state file at res
+    bucket       = "jeff-edgar-devops-lab-state"
+    key          = "state/application.tfstate" # The file directory path inside the bucket
+    region       = "us-east-1"
+    encrypt      = true # Encrypts the state file at res
     use_lockfile = true
   }
 }

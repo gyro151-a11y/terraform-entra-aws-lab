@@ -1,8 +1,8 @@
 # 2. Group our isolated subnets together so RDS knows where it's allowed to deploy
 resource "aws_db_subnet_group" "db_subnet_group" {
-  name       = "devops-lab-db-subnet-group"
+  name = "devops-lab-db-subnet-group"
   subnet_ids = [
-    data.aws_ssm_parameter.private_subnet_1.value, 
+    data.aws_ssm_parameter.private_subnet_1.value,
     data.aws_ssm_parameter.private_subnet_2.value
   ]
   tags = {

@@ -91,9 +91,9 @@ resource "aws_subnet" "private_subnet" {
 }
 
 resource "aws_subnet" "private_subnet_b" {
-  vpc_id            = aws_vpc.lab_vpc.id
-  cidr_block        = var.private_subnet_b_cidr # Ensure this variable or string is distinct!
-  availability_zone = "${var.aws_region}b"
+  vpc_id                  = aws_vpc.lab_vpc.id
+  cidr_block              = var.private_subnet_b_cidr # Ensure this variable or string is distinct!
+  availability_zone       = "${var.aws_region}b"
   map_public_ip_on_launch = false
 
   tags = {

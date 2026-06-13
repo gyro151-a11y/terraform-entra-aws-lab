@@ -118,7 +118,7 @@ resource "aws_ecs_service" "app_service" {
   network_configuration {
     subnets          = [data.aws_ssm_parameter.private_subnet_1.value]
     security_groups  = [data.aws_ssm_parameter.web_sg_id.value]
-    assign_public_ip = false                          # Pinned strictly in our isolated room away from the internet
+    assign_public_ip = false # Pinned strictly in our isolated room away from the internet
   }
 
 

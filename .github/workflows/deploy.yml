@@ -7,9 +7,6 @@ on:
   pull_request:
     branches:
       - main
-
-env:
-  TF_VAR_ssh_public_key: ${{ secrets.SSH_PUBLIC_KEY }}
   
 permissions:
   id-token: write # MANDATORY for Zero Trust cryptographic OIDC handshake tokens
@@ -19,11 +16,6 @@ jobs:
   validate:
     name: "Lint and Validate IaC"
     runs-on: ubuntu-latest
-    # 📁 DEFAULT: Forces all run steps in this job to execute inside the sandbox folder
-    defaults:
-      run:
-        working-directory: ./app-sandbox
-
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -39,32 +31,25 @@ jobs:
         with:
           terraform_wrapper: false
 
-      - name: Terraform Init
-        run: terraform init
 
       - name: Terraform Format Check
-        run: terraform fmt -check
+        run: make format-all
+
+      - name: Validate All Tiers
+        run: make validate-all
+
+
 
       # 🔍 TRIVY TARGET: Point directly to the app-sandbox subdirectory folder
       - name: Security Scan (Trivy)
         uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: 'config'
-          scan-ref: './app-sandbox'
+          scan-ref: '.'
           hide-progress: true
           format: 'table'
           exit-code: '1'
           ignore-unfixed: true
-
-      - name: Terraform Plan
-        id: plan
-        run: terraform plan -no-color -out=tfplan
-        continue-on-error: false
-      - name: Upload Terraform Plan
-        uses: actions/upload-artifact@v4
-        with:
-          name: tfplan
-          path: ./app-sandbox/tfplan
 
   deploy:
     name: "Terraform Apply"
@@ -72,10 +57,9 @@ jobs:
     needs: validate 
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     # 📁 DEFAULT: Forces all run steps in this job to execute inside the sandbox folder
-    defaults:
-      run:
-        working-directory: ./app-sandbox
-
+    env:
+      # Inject the secret directly into the runner environment
+      TF_VAR_ssh_public_key: ${{ secrets.SSH_PUBLIC_KEY }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -86,27 +70,6 @@ jobs:
           role-to-assume: arn:aws:iam::629897139637:role/devops-lab-github-actions-role
           aws-region: us-east-1
 
-      # ⚖️ CLOUDFORMATION PATH: Look one directory up (../) to grab the root alb.yaml
-      - name: Deploy Ingress Tier (CloudFormation)
-        run: |
-          aws cloudformation deploy \
-            --template-file ../alb.yaml \
-            --stack-name devops-lab-alb-tier \
-            --region us-east-1
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_wrapper: false
-
-      - name: Terraform Init
-        run: terraform init
-
-      - name: Download Terraform Plan
-        uses: actions/download-artifact@v4
-        with:
-          name: tfplan
-          path: ./app-sandbox
-        
-      - name: Terraform Apply  
-        run: terraform apply -auto-approve -no-color tfplan
+      # The Makefile handles all directory transitions and dependency order
+      - name: Execute Full Deployment Pipeline
+        run: make deploy-all

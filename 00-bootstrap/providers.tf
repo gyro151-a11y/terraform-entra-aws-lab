@@ -6,7 +6,7 @@ terraform {
       version = "~> 5.0"
     }
   }
-  
+
   # 🔒 STAYS LOCAL: This tracks the bootstrap state right inside this directory
   backend "local" {}
 }
