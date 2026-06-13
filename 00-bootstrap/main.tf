@@ -13,6 +13,7 @@ resource "aws_s3_bucket" "state_bucket" {
 }
 
 # Enforce encryption at rest for sensitive state strings
+# trivy:ignore:aws-0132  # Approved: Free-tier native SSE-S3 (AES256) meets lab cost constraints over KMS
 resource "aws_s3_bucket_server_side_encryption_configuration" "state_encryption" {
   bucket = aws_s3_bucket.state_bucket.id
 

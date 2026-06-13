@@ -284,6 +284,7 @@ resource "aws_security_group" "web_sg" {
 
   # Global Outbound
   egress {
+    # trivy:ignore:aws-0104  # Approved: Web application clusters require outbound internet routing for system updates and package patching
     description = "Allow all outbound software update payloads"
     from_port   = 0
     to_port     = 0
