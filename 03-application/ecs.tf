@@ -153,8 +153,8 @@ resource "aws_appautoscaling_policy" "ecs_policy_cpu" {
       predefined_metric_type = "ECSServiceAverageCPUUtilization"
     }
 
-    target_value       = 50.0  # 🎯 Target 50% average CPU utilization
-    scale_in_cooldown  = 60    # ⏳ Wait 60 seconds before scaling down
-    scale_out_cooldown = 60    # ⚡ Scale up aggressively (60 seconds)
+    target_value       = 50.0 # 🎯 Target 50% average CPU utilization
+    scale_in_cooldown  = 60   # ⏳ Wait 60 seconds before scaling down
+    scale_out_cooldown = 60   # ⚡ Scale up aggressively (60 seconds)
   }
 }
