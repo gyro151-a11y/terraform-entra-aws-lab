@@ -2,6 +2,9 @@
 # LOCAL DEVELOPMENT AUTOMATION CONTROL PANEL
 # ==============================================================================
 
+# Force the GitHub Actions binary path into the Makefile subshell environment
+export PATH := $(PATH):/home/runner/.local/bin:/opt/hostedtoolcache/terraform/1.15.5/x64
+
 .PHONY: init validate plan lint deploy build destroy ecs-list ecs-kill
 
 
