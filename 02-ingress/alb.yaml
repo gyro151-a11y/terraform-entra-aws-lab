@@ -18,7 +18,6 @@ Resources:
   # ⚖️ The Application Load Balancer Appliance
   ApplicationLoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
-    # trivy:ignore:aws-0053  #  Approved: Exposing public ingress point for lab validation
     Properties:
       Scheme: internet-facing
       Type: application
@@ -46,7 +45,6 @@ Resources:
   # 👂 Listener to capture incoming port 80 traffic
   ALBListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
-    # trivy:ignore:aws-0054  #  Approved: Sandbox environment bypasses ACM SSL/TLS certificate requirements
     Properties:
       DefaultActions:
         - Type: forward
