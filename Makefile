@@ -10,14 +10,14 @@ DESTROY_VARS = -var="allow_db_destruction=true" -var="ssh_public_key=\$$(cat ~/.
 
 # Initialize both Terraform and Packer working plugins
 init:
-	packer init ubuntu.pkr.hcl
+#	packer init ubuntu.pkr.hcl
 	cd 00-bootstrap && terraform init
 	cd 01-network && terraform init
 	cd 03-application && terraform init
 
 # Validate that your code formatting and syntax contain zero errors
 validate-all:
-	packer validate ubuntu.pkr.hcl
+#	packer validate ubuntu.pkr.hcl
 	cd 01-network && terraform validate
 	cd 03-application && terraform validate
 
@@ -66,9 +66,9 @@ deploy-all:
 	@echo "✅ Deployment completely finalized! Your sandbox is live."
 
 # Execute the actual image baking pipeline in the cloud
-build:
-	packer init ubuntu.pkr.hcl
-	packer build ubuntu.pkr.hcl
+# build:
+#	packer init ubuntu.pkr.hcl
+#	packer build ubuntu.pkr.hcl
 
 # Completely destroy all deployed cloud resources to protect your budget
 destroy-all:
