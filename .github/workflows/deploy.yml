@@ -73,7 +73,7 @@ jobs:
       # The Makefile handles all directory transitions and dependency order
       - name: Execute Full Deployment Pipeline
         run: |
-          export PATH=$PATH:$(dirname $(which terraform))
+          export PATH="$PATH:/opt/hostedtoolcache/terraform/1.15.5/x64"
           make deploy-all
         env:
           # Automatically satisfies both variables across all directories
