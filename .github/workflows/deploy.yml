@@ -72,4 +72,10 @@ jobs:
 
       # The Makefile handles all directory transitions and dependency order
       - name: Execute Full Deployment Pipeline
-        run: make deploy-all
+        run: |
+          export PATH=$PATH:$(dirname $(which terraform))
+          make deploy-all
+        env:
+          # Automatically satisfies both variables across all directories
+          TF_VAR_ssh_public_key: ${{ secrets.SSH_PUBLIC_KEY }}
+          TF_VAR_admin_ssh_cidr: "0.0.0.0/0"

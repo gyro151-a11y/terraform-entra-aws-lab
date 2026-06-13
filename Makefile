@@ -8,8 +8,8 @@ export PATH := $(PATH):/home/runner/.local/bin:/opt/hostedtoolcache/terraform/1.
 .PHONY: init validate plan lint deploy build destroy ecs-list ecs-kill
 
 
-VARS_FLAG = -var="admin_ssh_cidr=$$$$((curl -s http://checkip.amazonaws.com))/32" -var="ssh_public_key=\$$(cat ~/.ssh/devops_lab_key.pub)"
-DESTROY_VARS = -var="allow_db_destruction=true" -var="ssh_public_key=\$$(cat ~/.ssh/devops_lab_key.pub)"
+VARS_FLAG = 
+DESTROY_VARS = -var="allow_db_destruction=true"
 
 # Initialize both Terraform and Packer working plugins
 init:
@@ -52,7 +52,7 @@ show-alb-log:
 
 deploy-all:
 	@echo "🌐 Phase 1: Deploying Network Foundation and Base Firewalls..."
-	cd 01-network && terraform init -reconfigure && terraform apply $(VARS_FLAG) --auto-approve
+	cd 01-network && terraform init -reconfigure && terraform apply --auto-approve
 
 	@if aws cloudformation describe-stacks --stack-name devops-lab-alb-tier --region us-east-1 >/dev/null 2>&1; then \
 		echo "ℹ️ CloudFormation stack 'devops-lab-alb-tier' already exists. Skipping creation."; \
@@ -67,7 +67,7 @@ deploy-all:
 	fi
 
 	@echo "🚀 Phase 3: Launching Decoupled Application and Database Tiers..."
-	cd 03-application && terraform init -reconfigure && terraform apply $(VARS_FLAG) --auto-approve
+	cd 03-application && terraform init -reconfigure && terraform apply --auto-approve
 	@echo "✅ Deployment completely finalized! Your sandbox is live."
 
 # Execute the actual image baking pipeline in the cloud
