@@ -1,0 +1,12 @@
+# 00-bootstrap: Safe lab overrides for S3 State Storage
+AWS-0089 # Approved: Logging disabled to minimize sandbox account clutter
+AWS-0090 # Approved: S3 bucket versioning is intentionally unmanaged here
+AWS-0132 # Approved: Free-tier AES256 encryption used over costly KMS keys
+
+# 01-network: Essential routing paths
+AWS-0104 # Approved: Outbound internet egress (0.0.0.0/0) required for apt package updates
+
+# 02-ingress: Public lab endpoints
+AWS-0052 # Approved: HTTP test headers permitted for mock ingress routing
+AWS-0053 # Approved: ALB is internet-facing to allow public sandbox testing
+AWS-0054 # Approved: Port 80 HTTP listener active; bypasses formal ACM SSL stacks
