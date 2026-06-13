@@ -18,8 +18,10 @@ init:
 # Validate that your code formatting and syntax contain zero errors
 validate-all:
 #	packer validate ubuntu.pkr.hcl
-	cd 01-network && terraform validate
-	cd 03-application && terraform validate
+	@echo "🔍 Initializing and validating 01-network..."
+	cd 01-network && terraform init -backend=false && terraform validate
+	@echo "🔍 Initializing and validating 03-application..."
+	cd 03-application && terraform init -backend=false && terraform validate
 
 	# Runs formatting command against all tf files
 format-all:
