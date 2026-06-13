@@ -130,3 +130,31 @@ resource "aws_ecs_service" "app_service" {
     container_port   = 80
   }
 }
+
+# 🎯 1. Define the Scaling Target (The Guardrails)
+resource "aws_appautoscaling_target" "ecs_target" {
+  max_capacity       = 5
+  min_capacity       = 1
+  resource_id        = "service/${aws_ecs_cluster.lab_cluster.name}/${aws_ecs_service.service_engine.name}"
+  scalable_dimension = "ecs:service:DesiredCount"
+  service_namespace  = "ecs"
+}
+
+# 📈 2. Define the Scaling Policy (The Brains)
+resource "aws_appautoscaling_policy" "ecs_policy_cpu" {
+  name               = "cpu-target-tracking"
+  policy_type        = "TargetTrackingScaling"
+  resource_id        = aws_appautoscaling_target.ecs_target.resource_id
+  scalable_dimension = aws_appautoscaling_target.ecs_target.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.ecs_target.service_namespace
+
+  target_tracking_scaling_policy_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "ECSServiceAverageCPUUtilization"
+    }
+
+    target_value       = 50.0  # 🎯 Target 50% average CPU utilization
+    scale_in_cooldown  = 60    # ⏳ Wait 60 seconds before scaling down
+    scale_out_cooldown = 60    # ⚡ Scale up aggressively (60 seconds)
+  }
+}
