@@ -57,9 +57,6 @@ jobs:
     needs: validate 
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     # 📁 DEFAULT: Forces all run steps in this job to execute inside the sandbox folder
-    env:
-      # Inject the secret directly into the runner environment
-      TF_VAR_ssh_public_key: ${{ secrets.SSH_PUBLIC_KEY }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -70,12 +67,15 @@ jobs:
           role-to-assume: arn:aws:iam::629897139637:role/devops-lab-github-actions-role
           aws-region: us-east-1
 
-      # The Makefile handles all directory transitions and dependency order
-      - name: Execute Full Deployment Pipeline
+      # 🌐 OS-LEVEL INSTALL: Drops a universal binary directly into /usr/bin/terraform
+      - name: "⚙️ Install Native Linux Terraform Binary"
         run: |
-          export PATH="$PATH:/opt/hostedtoolcache/terraform/1.15.5/x64"
-          make deploy-all
+          wget -O- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+          echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.pkr.d/hashicorp.list
+          sudo apt-get update && sudo apt-get install -y terraform=1.15.5-*
+
+      - name: Execute Full Deployment Pipeline
+        run: make deploy-all
         env:
-          # Automatically satisfies both variables across all directories
           TF_VAR_ssh_public_key: ${{ secrets.SSH_PUBLIC_KEY }}
           TF_VAR_admin_ssh_cidr: "0.0.0.0/0"
