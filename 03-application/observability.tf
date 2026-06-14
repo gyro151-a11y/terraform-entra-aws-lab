@@ -46,7 +46,7 @@ resource "aws_kms_key" "sns_encryption_key" {
         Sid       = "Allow EventBridge to Use the Key"
         Effect    = "Allow"
         Principal = { "Service" = "events.amazonaws.com" }
-        Action    = [
+        Action = [
           "kms:Decrypt",
           "kms:GenerateDataKey*"
         ]
