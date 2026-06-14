@@ -112,6 +112,12 @@ resource "aws_iam_role_policy_attachment" "ssm_attach" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
+# 📑 Attach the standard CloudWatch Agent Server policy to the role
+resource "aws_iam_role_policy_attachment" "cw_agent_attach" {
+  role       = aws_iam_role.jumpbox_ssm_role.name
+  policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+}
+
 # 🎟️ Package the role into an Instance Profile that EC2 can consume
 resource "aws_iam_instance_profile" "jumpbox_profile" {
   name = "devops-lab-jumpbox-ssm-profile"
