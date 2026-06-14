@@ -25,10 +25,47 @@ resource "aws_cloudwatch_metric_alarm" "nginx_5xx_alarm" {
   treat_missing_data  = "notBreaching"
 }
 
-# 📡 Create the SNS Notification Topic for the DevOps Response Team
+# 🔑 1. Create a Dedicated Customer Managed KMS Key for the Lab
+resource "aws_kms_key" "sns_encryption_key" {
+  description             = "Customer managed KMS key for encrypting high-priority application SNS topics"
+  deletion_window_in_days = 7
+  enable_key_rotation     = true # 🔐 Compliance gold standard: Automatic annual key rotation
+
+  # 📑 Standard baseline key policy allowing the root account to manage it
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid       = "Enable IAM User Permissions"
+        Effect    = "Allow"
+        Principal = { "AWS" = "arn:aws:iam::629897139637:root" }
+        Action    = "kms:*"
+        Resource  = "*"
+      },
+      {
+        Sid       = "Allow EventBridge to Use the Key"
+        Effect    = "Allow"
+        Principal = { "Service" = "events.amazonaws.com" }
+        Action    = [
+          "kms:Decrypt",
+          "kms:GenerateDataKey*"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+# 🏷️ 2. Create a clean Alias for the Customer Key
+resource "aws_kms_alias" "sns_key_alias" {
+  name          = "alias/devops-lab-sns-key"
+  target_key_id = aws_kms_key.sns_encryption_key.key_id
+}
+
+# 📡 3. The Fully Compliant SNS Topic
 resource "aws_sns_topic" "devops_alerts" {
   name              = "devops-lab-application-alerts"
-  kms_master_key_id = "alias/aws/sns" # 🔐 Encrypts the topic payloads using AWS-managed KMS
+  kms_master_key_id = aws_kms_alias.sns_key_alias.name # 🎯 Hardened with your own CMK!
 }
 
 # 🎭 EventBridge Rule watching for our specific Alarm flipping to an 'ALARM' state
