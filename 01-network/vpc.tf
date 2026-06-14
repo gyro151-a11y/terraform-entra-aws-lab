@@ -176,10 +176,16 @@ resource "aws_security_group" "db_sg" {
   }
 }
 
-# Create the network traffic audit logger
+# 🌐 1. Create a dedicated, isolated Log Group for Network Telemetry
+resource "aws_cloudwatch_log_group" "vpc_network_logs" {
+  name              = "/vpc/devops-lab-flowlogs"
+  retention_in_days = 7  # 💰 Keeps lab storage costs low
+}
+
+# 🛰️ 2. Restructure the network traffic audit logger
 resource "aws_flow_log" "vpc_flow_logs" {
   iam_role_arn    = aws_iam_role.vpc_flow_log_role.arn
-  log_destination = aws_cloudwatch_log_group.ecs_logs.arn # Reuse your app log group
+  log_destination = aws_cloudwatch_log_group.vpc_network_logs.arn # 🎯 Point to the new dedicated group
   traffic_type    = "ALL"
   vpc_id          = aws_vpc.lab_vpc.id
 }

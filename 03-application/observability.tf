@@ -4,7 +4,7 @@ resource "aws_cloudwatch_log_metric_filter" "nginx_5xx_filter" {
   log_group_name = "/ecs/devops-lab-app"
 
   # 🎯 Searches for lines with GET or POST followed by a 5xx status, while ignoring flow logs
-  pattern = "\"GET\" \" 50\" -eni- -ACCEPT -REJECT"
+  pattern = "[ip, id, user, timestamp, request, status = 5*, bytes_sent]"
 
   metric_transformation {
     name      = "HTTP5xxErrorCount"
