@@ -41,7 +41,7 @@ resource "aws_instance" "jump_box" {
   subnet_id              = data.aws_ssm_parameter.public_subnet_1.value
   vpc_security_group_ids = [data.aws_ssm_parameter.web_sg_id.value]
   # 🔒 Mount the SSM identity profile to the hardware
-  iam_instance_profile   = aws_iam_instance_profile.jumpbox_profile.name
+  iam_instance_profile = aws_iam_instance_profile.jumpbox_profile.name
   # key_name               = aws_key_pair.lab_ssh_key.key_name
 
   # FIXES AWS-0028: Enforce IMDSv2 tokens
