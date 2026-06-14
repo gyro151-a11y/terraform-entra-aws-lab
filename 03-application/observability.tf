@@ -28,6 +28,7 @@ resource "aws_cloudwatch_metric_alarm" "nginx_5xx_alarm" {
 # 📡 Create the SNS Notification Topic for the DevOps Response Team
 resource "aws_sns_topic" "devops_alerts" {
   name = "devops-lab-application-alerts"
+  kms_master_key_id = "alias/aws/sns" # 🔐 Encrypts the topic payloads using AWS-managed KMS
 }
 
 # 🎭 EventBridge Rule watching for our specific Alarm flipping to an 'ALARM' state
