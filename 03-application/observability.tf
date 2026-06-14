@@ -1,13 +1,15 @@
-# 🔍 Metric Filter to detect 5XX Server Errors in the Nginx App Logs
+# 🔍 Hardened Metric Filter that completely ignores background VPC Flow Logs
 resource "aws_cloudwatch_log_metric_filter" "nginx_5xx_filter" {
   name           = "nginx-5xx-error-filter"
-  pattern        = "[ip, id, user, timestamp, request, status = 5*, bytes_sent]"
-  log_group_name = "/ecs/devops-lab-app" # 👈 Taps directly into your existing log stream
+  log_group_name = "/ecs/devops-lab-app"
+  
+  # 🎯 Excludes any messages containing 'eni-' or account structures, ensuring pure Nginx mapping
+  pattern        = " -eni- -ACCEPT -REJECT [ip, id, user, timestamp, request, status = 5*, bytes_sent]"
 
   metric_transformation {
     name      = "HTTP5xxErrorCount"
     namespace = "DevOpsLab/Application"
-    value     = "1" # Every time a log line matches, increment the counter by 1
+    value     = "1"
   }
 }
 
