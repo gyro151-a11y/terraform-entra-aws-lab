@@ -28,13 +28,11 @@
 #   role = aws_iam_role.ssm_role.name
 # }
 
-/*
 # 1. Register your local public key via a dynamic input variable
 resource "aws_key_pair" "lab_ssh_key" {
   key_name   = "devops-lab-wsl-key"
   public_key = var.ssh_public_key # <--- Swapped to a standard variable reference
 }
-*/
 
 # Temporary public jump box for zero-trust network verification
 resource "aws_instance" "jump_box" {
@@ -42,6 +40,8 @@ resource "aws_instance" "jump_box" {
   instance_type          = var.instance_type
   subnet_id              = data.aws_ssm_parameter.public_subnet_1.value
   vpc_security_group_ids = [data.aws_ssm_parameter.web_sg_id.value]
+  # 🔒 Mount the SSM identity profile to the hardware
+  iam_instance_profile   = aws_iam_instance_profile.jumpbox_profile.name
   # key_name               = aws_key_pair.lab_ssh_key.key_name
 
   # FIXES AWS-0028: Enforce IMDSv2 tokens
@@ -59,6 +59,63 @@ resource "aws_instance" "jump_box" {
   tags = {
     Name = "devops-lab-public-jump-box"
   }
+}
+
+# 🆔 Create an IAM Role for the EC2 Instance
+resource "aws_iam_role" "jumpbox_ssm_role" {
+  name = "devops-lab-jumpbox-ssm-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action    = "sts:AssumeRole"
+        Effect    = "Allow"
+        Principal = { Service = "ec2.amazonaws.com" }
+      }
+    ]
+  })
+}
+
+# 🔐 Add a scoped read policy for SSM Parameter Store
+resource "aws_iam_role_policy" "jumpbox_ssm_readonly" {
+  name = "devops-lab-jumpbox-ssm-readonly"
+  role = aws_iam_role.jumpbox_ssm_role.name
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid      = "AllowDescribeAllParameters"
+        Effect   = "Allow"
+        Action   = "ssm:DescribeParameters"
+        Resource = "*" # DescribeParameters requires "*" because it scans the entire regional inventory
+      },
+      {
+        Sid    = "AllowReadScopedParameters"
+        Effect = "Allow"
+        Action = [
+          "ssm:GetParameter",
+          "ssm:GetParameters",
+          "ssm:GetParameterHistory"
+        ],
+        # 🔒 Hardened: Can only read configurations belonging to your lab namespace
+        Resource = "arn:aws:ssm:us-east-1:629897139637:parameter/devops-lab/*"
+      }
+    ]
+  })
+}
+
+# 📑 Attach the standard AWS Managed SSM policy to the role
+resource "aws_iam_role_policy_attachment" "ssm_attach" {
+  role       = aws_iam_role.jumpbox_ssm_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
+# 🎟️ Package the role into an Instance Profile that EC2 can consume
+resource "aws_iam_instance_profile" "jumpbox_profile" {
+  name = "devops-lab-jumpbox-ssm-profile"
+  role = aws_iam_role.jumpbox_ssm_role.name
 }
 
 

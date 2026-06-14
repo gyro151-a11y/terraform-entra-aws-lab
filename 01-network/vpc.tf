@@ -256,15 +256,6 @@ resource "aws_security_group" "web_sg" {
   description = "Allow inbound routing for administrative and container ingress traffic"
   vpc_id      = aws_vpc.lab_vpc.id
 
-  # Administrative Access
-  ingress {
-    description = "Allow baseline inbound SSH"
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = [var.admin_ssh_cidr]
-  }
-
   # Container Routing Ingress 
   ingress {
     description = "Allow internal HTTP traffic from VPC loop"
