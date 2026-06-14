@@ -179,7 +179,7 @@ resource "aws_security_group" "db_sg" {
 # 🌐 1. Create a dedicated, isolated Log Group for Network Telemetry
 resource "aws_cloudwatch_log_group" "vpc_network_logs" {
   name              = "/vpc/devops-lab-flowlogs"
-  retention_in_days = 7  # 💰 Keeps lab storage costs low
+  retention_in_days = 7 # 💰 Keeps lab storage costs low
 }
 
 # 🛰️ 2. Restructure the network traffic audit logger
