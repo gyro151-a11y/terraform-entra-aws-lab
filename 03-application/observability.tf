@@ -3,8 +3,8 @@ resource "aws_cloudwatch_log_metric_filter" "nginx_5xx_filter" {
   name           = "nginx-5xx-error-filter"
   log_group_name = "/ecs/devops-lab-app"
 
-  # 🎯 Excludes any messages containing 'eni-' or account structures, ensuring pure Nginx mapping
-  pattern = " -eni- -ACCEPT -REJECT [ip, id, user, timestamp, request, status = 5*, bytes_sent]"
+  # 🎯 Looks for a literal double-quote followed by a 5XX code, while aggressively ignoring VPC flow markers
+  pattern = " -eni- -ACCEPT -REJECT \" \\\"HTTP/1.1\\\" 5\" "
 
   metric_transformation {
     name      = "HTTP5xxErrorCount"
